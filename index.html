@@ -49,7 +49,7 @@ body{font-family:var(--font-sans);background:var(--bg-app);color:var(--text);fon
 .topbar-stat .val.green{color:var(--green);background:var(--green-soft)}
 .topbar-stat .val.amber{color:#8a5e00;background:rgba(251,191,36,.2)}
 .topbar-stat .val.red{color:var(--red-marianne);background:var(--red-soft)}
-.theme-toggle,.settings-btn{background:var(--bg-panel);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.theme-toggle{background:var(--bg-panel);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
 .theme-toggle:hover{background:var(--blue-soft);border-color:var(--blue-marianne);transform:scale(1.05)}
 
 .app{display:grid;grid-template-columns:300px 1fr 300px;height:calc(100vh - 130px);overflow:hidden}
@@ -110,7 +110,7 @@ body{font-family:var(--font-sans);background:var(--bg-app);color:var(--text);fon
 .kpi.red{border-left-color:var(--red-marianne)} .kpi.red .value{color:var(--red-marianne)}
 
 .results{flex:1;overflow-y:auto;padding:14px;min-height:0}
-.result-card{background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--blue-marianne);border-radius:4px;padding:14px 16px;margin-bottom:10px;transition:all .15s;animation:fadeInUp .35s ease-out}
+.result-card{background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--blue-marianne);border-radius:4px;padding:14px 16px;margin-bottom:10px;transition:all .15s;animation:fadeInUp .35s ease-out;cursor:pointer}
 .result-card:hover{border-color:var(--blue-marianne);box-shadow:0 4px 12px rgba(0,0,145,.08);transform:translateX(2px)}
 @keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes fadeInLeft{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
@@ -122,13 +122,11 @@ body{font-family:var(--font-sans);background:var(--bg-app);color:var(--text);fon
 .rc-badge.niveau{background:var(--blue-marianne);color:#fff}
 .rc-badge.disc{background:var(--gold);color:#1e1e1e;text-transform:none}
 .rc-badge.voie{background:var(--green);color:#fff;text-transform:none}
-.rc-badge.year{background:var(--blue-soft);color:var(--blue-marianne)}
 .rc-badge.abroge{background:var(--red-marianne);color:#fff}
 .rc-badge.vigueur{background:var(--green-soft);color:var(--green)}
 .rc-org{color:var(--grey-700);font-weight:600;font-size:12px;margin-bottom:6px}
 .rc-meta{display:flex;gap:6px;font-family:var(--font-mono);font-size:10px;color:var(--grey-500);flex-wrap:wrap;margin-top:8px}
 .rc-meta .tag{background:var(--grey-50);padding:3px 8px;border-radius:3px;border:1px solid var(--border);color:var(--grey-700)}
-.rc-meta a{color:var(--blue-marianne);text-decoration:none;font-weight:700}
 
 .empty,.loading{text-align:center;padding:60px 20px;color:var(--grey-500);font-size:14px}
 
@@ -223,6 +221,11 @@ summary:hover{background:var(--blue-soft)}
 .mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200}
 .mobile-overlay.visible{display:block}
 
+/* Barre de chargement */
+.loadbar{position:fixed;top:0;left:0;right:0;height:3px;background:var(--blue-soft);z-index:2000;display:none}
+.loadbar.visible{display:block}
+.loadbar-fill{height:100%;background:linear-gradient(90deg,var(--blue-marianne),var(--red-marianne));width:0;transition:width .3s}
+
 @media(max-width:900px){
   .app{display:flex;flex-direction:column;height:auto}
   .sidebar{position:fixed;top:0;left:0;bottom:0;width:300px;max-width:85vw;z-index:300;transform:translateX(-100%);transition:transform .3s ease-out;box-shadow:8px 0 24px rgba(0,0,0,.15)}
@@ -240,6 +243,7 @@ summary:hover{background:var(--blue-soft)}
 </head>
 <body>
 
+<div class="loadbar" id="loadbar"><div class="loadbar-fill" id="loadbarFill"></div></div>
 <div class="tricolore"></div>
 
 <div class="bloc-marque">
@@ -270,14 +274,14 @@ summary:hover{background:var(--blue-soft)}
   <aside class="sidebar" id="sidebar">
     <div class="sb-head">
       <div class="sb-title">🌿 Plantes médicinales</div>
-      <div class="sb-count" id="sbCount">Chargez un fichier JSON</div>
+      <div class="sb-count" id="sbCount">Chargement…</div>
     </div>
     <div class="sb-list" id="sbList">
-      <div class="loading" style="padding:20px;font-size:11px">Aucune plante détectée.</div>
+      <div class="loading" style="padding:20px;font-size:11px">Chargement des plantes…</div>
     </div>
     <div class="drop-zone" id="dropZone">
       <div class="icon">📁</div>
-      <div class="title">Glissez-déposez ScentInDB.json</div>
+      <div class="title">Glissez-déposez un JSON</div>
       <div class="sub">ou cliquez pour choisir un fichier</div>
       <input type="file" id="fileInput" accept=".json" style="display:none">
     </div>
@@ -297,7 +301,7 @@ summary:hover{background:var(--blue-soft)}
 
     <div class="mode-tabs">
       <button class="mode-tab active" data-view="results">🌿 Plantes</button>
-      <button class="mode-tab" data-view="categories">📂 Familles</button>
+      <button class="mode-tab" data-view="categories">📂 Parties</button>
       <button class="mode-tab" data-view="matrix">🔲 Matrice Plante×Vertu</button>
       <button class="mode-tab" data-view="analytics">📊 Analyses</button>
       <button class="mode-tab" data-view="timeline">📈 Top composés</button>
@@ -324,7 +328,8 @@ summary:hover{background:var(--blue-soft)}
       <div class="empty">
         <div style="font-size:48px;margin-bottom:16px">🇫🇷</div>
         <div style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:16px">Monitor Huiles Essentielles</div>
-        <div>Chargez <strong>ScentInDB.json</strong> depuis la barre latérale.</div>
+        <div>Chargement automatique de <strong>ScentInDB_web.json</strong>…</div>
+        <div style="margin-top:14px;font-size:12px;color:var(--grey-500)">Ou glissez un fichier JSON dans la zone à gauche.</div>
       </div>
     </div>
 
@@ -360,13 +365,13 @@ summary:hover{background:var(--blue-soft)}
       <div class="intel-panel">
         <div class="intel-head">🏆 TOP VERTUS INFÉRÉES</div>
         <div class="intel-body" id="topDisc">
-          <div style="text-align:center;color:var(--grey-500);font-size:11px;padding:8px">Chargez des données</div>
+          <div style="text-align:center;color:var(--grey-500);font-size:11px;padding:8px">Chargement…</div>
         </div>
       </div>
       <div class="intel-panel">
-        <div class="intel-head">🌿 TOP FAMILLES BOTANIQUES</div>
+        <div class="intel-head">🌿 TOP CLASSES CHIMIQUES</div>
         <div class="intel-body" id="yearsSummary">
-          <div style="text-align:center;color:var(--grey-500);font-size:11px;padding:8px">Chargez des données</div>
+          <div style="text-align:center;color:var(--grey-500);font-size:11px;padding:8px">Chargement…</div>
         </div>
       </div>
     </div>
@@ -403,7 +408,53 @@ function toggleTheme(){
   if (state.all.length) renderResults();
 }
 
-/* ============ CHARGEMENT FICHIER ============ */
+/* ============ PROGRESS BAR ============ */
+function showLoadbar(){ const b = $('loadbar'); if (b) b.classList.add('visible'); }
+function hideLoadbar(){ const b = $('loadbar'); if (b) b.classList.remove('visible'); const f = $('loadbarFill'); if (f) f.style.width = '0'; }
+function setLoadbar(pct){ const f = $('loadbarFill'); if (f) f.style.width = pct + '%'; }
+
+/* ============ CHARGEMENT AUTOMATIQUE (fetch) ============ */
+async function chargerAuto(){
+  const candidats = [
+    'ScentInDB_web.json',        // version légère (GitHub Pages friendly)
+    'ScentInDB_enriched.json',   // version complète
+    'ScentInDB.json'             // version brute
+  ];
+  for (const url of candidats){
+    try {
+      showLoadbar();
+      setLoadbar(20);
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) { setLoadbar(0); continue; }
+      setLoadbar(60);
+      const text = await r.text();
+      // Vérifier qu'on n'a pas un pointeur LFS
+      if (text.startsWith('version https://git-lfs.github.com/spec/v1')){
+        console.warn(url + ' est un pointeur LFS, ignoré');
+        setLoadbar(0);
+        continue;
+      }
+      setLoadbar(80);
+      let data = JSON.parse(text);
+      if (!Array.isArray(data)){
+        if (data.plants) data = data.plants;
+        else if (data.records) data = data.records;
+        else data = Object.values(data);
+      }
+      setLoadbar(100);
+      loadData(data, url);
+      hideLoadbar();
+      return true;
+    } catch (e){
+      console.warn('Échec ' + url + ':', e.message);
+      setLoadbar(0);
+    }
+  }
+  hideLoadbar();
+  return false;
+}
+
+/* ============ CHARGEMENT MANUEL ============ */
 function setupDropZone(){
   const dz = $('dropZone'), fi = $('fileInput');
   if (!dz || !fi) return;
@@ -441,7 +492,7 @@ function loadData(data, sourceName){
   state.selectedVertus.clear();
   state.selectedPart = null;
 
-  safeSet('tbSource', sourceName.slice(0, 18), 'val green');
+  safeSet('tbSource', sourceName.slice(0, 22), 'val green');
   safeSet('ivSource', sourceName, 'v cyan');
   safeSet('ivStatus', '● CHARGÉ', 'v green');
   safeSet('ivDate', state.loadedAt.toLocaleString('fr-FR'));
@@ -476,17 +527,13 @@ function normalizePlant(p){
 function updateStats(){
   const total = state.all.length;
   const compounds = state.all.reduce((s, p) => s + p.compoundCount, 0);
-  const vertus = new Set();
-  const therapies = new Set();
-  const uses = new Set();
-  const odors = new Set();
+  const vertus = new Set(), therapies = new Set(), uses = new Set(), odors = new Set();
   for (const p of state.all){
     p.vertus.forEach(v => vertus.add(v));
     p.therapies.forEach(t => therapies.add(t));
     p.uses.forEach(u => uses.add(u));
     p.odor_color.forEach(o => { if (o.odor) odors.add(o.odor); });
   }
-
   safeSet('tbCount', fmtNum(total));
   safeSet('tbDisc', fmtNum(compounds));
   safeSet('tbNiveaux', fmtNum(vertus.size));
@@ -496,7 +543,6 @@ function updateStats(){
   safeSet('ivVoies', fmtNum(therapies.size));
   safeSet('ivYears', fmtNum(uses.size));
   safeSet('ivAbroges', fmtNum(odors.size));
-
   renderTopVertus();
   renderTopFamilles();
 }
@@ -534,7 +580,6 @@ function renderTopFamilles(){
     el.innerHTML = '<div style="text-align:center;color:var(--grey-500);font-size:11px;padding:8px">Chargez des données</div>';
     return;
   }
-  // Compter les classes chimiques majoritaires
   const counts = {};
   for (const p of state.all){
     const classes = new Set();
@@ -652,7 +697,6 @@ function applyFilters(page = 1){
       for (const v of state.selectedVertus) if (!p.vertus.includes(v)) return false;
     }
     if (!q) return true;
-    // Recherche large : plante + composés + vertus + thérapies + usages
     const hay = [
       p.plant,
       ...p.vertus,
@@ -689,7 +733,7 @@ function applyFilters(page = 1){
 function renderKPIs(data){
   const count = data.length;
   const compounds = data.reduce((s, p) => s + p.compoundCount, 0);
-  const vertus = new Set(); const therapies = new Set(); const odors = new Set();
+  const vertus = new Set(), therapies = new Set(), odors = new Set();
   for (const p of data){
     p.vertus.forEach(v => vertus.add(v));
     p.therapies.forEach(t => therapies.add(t));
@@ -722,7 +766,7 @@ function renderResults(){
   if (!slice.length){
     area.innerHTML = state.all.length
       ? `<div class="empty">Aucune plante ne correspond aux critères.<br><button onclick="$('filtersClear').click()" style="margin-top:14px;padding:8px 16px;background:var(--blue-marianne);color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:700">✖ Effacer les filtres</button></div>`
-      : `<div class="empty"><div style="font-size:48px;margin-bottom:16px">🇫🇷</div><div style="font-weight:700;margin-bottom:8px">Aucune plante chargée</div><div>Glissez <strong>ScentInDB.json</strong> dans la zone à gauche.</div></div>`;
+      : `<div class="empty"><div style="font-size:48px;margin-bottom:16px">🇫🇷</div><div style="font-weight:700;margin-bottom:8px">Aucune plante chargée</div><div>Glissez un JSON dans la zone à gauche, ou vérifiez que <strong>ScentInDB_web.json</strong> est présent sur le serveur.</div></div>`;
     return;
   }
 
@@ -747,20 +791,19 @@ function renderResults(){
       ${topVertus.length ? `<div class="rc-org">🧪 ${topVertus.map(v => escapeHtml(v)).join(' · ')}</div>` : ''}
       ${topCompounds.length ? `<div style="font-size:11px;color:var(--grey-500);font-family:var(--font-mono);margin-top:4px">Top: ${topCompounds.map(c => escapeHtml(c)).join(', ')}</div>` : ''}
       <div class="rc-meta">
-        <span class="tag">📅 ${p.parts.length} partie(s)</span>
-        ${p.odor_color.length ? `<span class="tag">🎨 ${escapeHtml(p.odor_color[0]?.color || '—')}</span>` : ''}
+        <span class="tag">🌿 ${p.parts.length} partie(s)</span>
+        ${p.odor_color.length && p.odor_color[0]?.color ? `<span class="tag">🎨 ${escapeHtml(p.odor_color[0].color)}</span>` : ''}
         ${p.odor_color.length && p.odor_color[0]?.odor ? `<span class="tag">👃 ${escapeHtml(p.odor_color[0].odor)}</span>` : ''}
       </div>
     </div>`;
   }).join('');
   area.innerHTML = header + cards;
-  // Clic sur carte = détail
   area.querySelectorAll('.result-card').forEach((el, i) => {
     el.addEventListener('click', () => afficherFiche(slice[i]));
   });
 }
 
-/* ============ FICHE DÉTAILLÉE (modal-like) ============ */
+/* ============ FICHE DÉTAILLÉE ============ */
 function afficherFiche(p){
   const area = $('resultsArea');
   const totalComp = p.compoundCount;
@@ -812,7 +855,7 @@ function afficherFiche(p){
   area.scrollTop = 0;
 }
 
-/* ============ VUE FAMILLES ============ */
+/* ============ VUE PARTIES ============ */
 function renderCategories(){
   const area = $('resultsArea');
   const data = state.filtered.length ? state.filtered : state.all;
@@ -856,7 +899,6 @@ function renderMatrix(){
   const area = $('resultsArea');
   const data = state.filtered.length ? state.filtered : state.all;
   if (!data.length){ area.innerHTML = '<div class="empty">Chargez des données.</div>'; return; }
-  // Top 8 vertus × top 12 plantes
   const vertuCount = {};
   for (const p of data) for (const v of p.vertus) vertuCount[v] = (vertuCount[v] || 0) + 1;
   const topVertus = Object.entries(vertuCount).sort((a,b) => b[1]-a[1]).slice(0, 8).map(x => x[0]);
@@ -899,7 +941,6 @@ function renderAnalytics(){
   const data = state.filtered.length ? state.filtered : state.all;
   if (!data.length){ area.innerHTML = '<div class="empty">Chargez des données.</div>'; return; }
   const byVertu = {}, byTherapy = {}, byPart = {}, byOdor = {};
-  let abrogeCount = 0;
   for (const p of data){
     for (const v of p.vertus) byVertu[v] = (byVertu[v] || 0) + 1;
     for (const t of p.therapies) byTherapy[t] = (byTherapy[t] || 0) + 1;
@@ -967,7 +1008,7 @@ function makePieChart(obj, total){
   </div>`;
 }
 
-/* ============ VUE TOP COMPOSÉS (timeline remplacée) ============ */
+/* ============ VUE TOP COMPOSÉS ============ */
 function renderTimeline(){
   const area = $('resultsArea');
   const data = state.filtered.length ? state.filtered : state.all;
@@ -977,22 +1018,19 @@ function renderTimeline(){
     for (const o of p.oils){
       for (const c of (o.compounds || [])){
         if (!c.name) continue;
-        if (!compCount[c.name]) compCount[c.name] = { count: 0, totalPct: 0, plants: new Set() };
-        compCount[c.name].count++;
-        compCount[c.name].totalPct += c.percent || 0;
-        compCount[c.name].plants.add(p.plant);
+        compCount[c.name] = (compCount[c.name] || 0) + 1;
       }
     }
   }
-  const top = Object.entries(compCount).sort((a,b) => b[1].count - a[1].count).slice(0, 25);
+  const top = Object.entries(compCount).sort((a,b) => b[1] - a[1]).slice(0, 25);
   if (!top.length){ area.innerHTML = '<div class="empty">Aucun composé.</div>'; return; }
-  const max = top[0][1].count;
-  const rows = top.map(([name, s], i) => {
-    const pct = (s.count / max) * 100;
+  const max = top[0][1];
+  const rows = top.map(([name, count], i) => {
+    const pct = (count / max) * 100;
     return `<div class="bar-row" style="animation-delay:${Math.min(i * 25, 500)}ms">
       <div class="name" title="${escapeHtml(name)}">${escapeHtml(name)}</div>
       <div class="bar-track"><div class="bar-fill anim-bar" style="width:0" data-w="${pct}%"></div></div>
-      <div class="val">${s.count}</div>
+      <div class="val">${count}</div>
     </div>`;
   }).join('');
   area.innerHTML = `<div class="analytics-panel">
@@ -1111,7 +1149,7 @@ $('clearBtn')?.addEventListener('click', () => {
   $('sbList').innerHTML = '<div class="loading" style="padding:20px;font-size:11px">Aucune plante détectée.</div>';
   $('topDisc').innerHTML = '<div style="text-align:center;color:var(--grey-500);font-size:11px;padding:8px">Chargez des données</div>';
   $('yearsSummary').innerHTML = '<div style="text-align:center;color:var(--grey-500);font-size:11px;padding:8px">Chargez des données</div>';
-  $('resultsArea').innerHTML = `<div class="empty"><div style="font-size:48px;margin-bottom:16px">🇫🇷</div><div style="font-weight:700;margin-bottom:8px">Aucune plante chargée</div><div>Glissez <strong>ScentInDB.json</strong>.</div></div>`;
+  $('resultsArea').innerHTML = `<div class="empty"><div style="font-size:48px;margin-bottom:16px">🇫🇷</div><div style="font-weight:700;margin-bottom:8px">Aucune plante chargée</div><div>Glissez un JSON.</div></div>`;
   toast('🗑️ Données effacées', 'info');
 });
 $('exportCsv')?.addEventListener('click', () => {
@@ -1147,8 +1185,26 @@ document.addEventListener('keydown', e => {
   applyTheme();
   setupDropZone();
   const dot = $('statusDot'); if (dot) dot.classList.add('offline');
-  safeSet('ivStatus', '● EN ATTENTE', 'v amber');
-  safeSet('tbSource', 'AUCUNE', 'val amber');
+  safeSet('ivStatus', '● CHARGEMENT…', 'v amber');
+  safeSet('tbSource', 'AUTO', 'val amber');
+
+  const ok = await chargerAuto();
+  if (!ok){
+    const dot = $('statusDot'); if (dot) dot.classList.add('offline');
+    safeSet('ivStatus', '● MANUEL', 'v red');
+    safeSet('tbSource', 'AUCUNE', 'val red');
+    document.getElementById('resultsArea').innerHTML = `
+      <div class="empty">
+        <div style="font-size:48px;margin-bottom:16px">📁</div>
+        <div style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:16px">Chargement automatique impossible</div>
+        <div style="margin-bottom:14px">Le fichier <strong>ScentInDB_web.json</strong> n'est pas accessible depuis cette page.</div>
+        <div style="font-size:13px;color:var(--grey-700);line-height:1.8">
+          1️⃣ Vérifiez qu'il est bien uploadé sur GitHub<br>
+          2️⃣ Ou <strong>glissez-déposez</strong> le fichier dans la zone en bas à gauche
+        </div>
+      </div>`;
+    toast('⚠️ Glissez ScentInDB_web.json dans la zone à gauche', 'info', 8000);
+  }
 })();
 </script>
 </body>
