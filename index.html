@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🇫🇷 Monitor Huiles Essentielles — sCentInDB</title>
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --blue-marianne:#000091; --blue-hi:#1212ff; --blue-soft:#e3e3fd;
+  --red-marianne:#E1000F; --red-soft:#ffe9e9;
+  --gold:#fbbf24; --gold-hi:#f59e0b;
+  --green:#16a34a; --green-soft:#dcfce7;
+  --white:#fff; --grey-50:#f6f6f6; --grey-100:#eee; --grey-200:#e5e5e5;
+  --grey-500:#929292; --grey-700:#3a3a3a; --grey-900:#1e1e1e;
+  --font-mono:'SF Mono',Menlo,Consolas,monospace;
+  --font-sans:'Marianne',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --bg-app:#f6f6f6; --bg-panel:#fff; --border:#e5e5e5; --text:#1e1e1e; --text-muted:#929292;
+}
+[data-theme="dark"]{
+  --white:#1a1d24; --grey-50:#12141a; --grey-100:#1e2129; --grey-200:#2a2e38;
+  --grey-500:#7a8090; --grey-700:#b8bcc6; --grey-900:#f0f2f5;
+  --blue-soft:#1e1e4d;
+  --bg-app:#12141a; --bg-panel:#1a1d24; --border:#2a2e38; --text:#f0f2f5; --text-muted:#7a8090;
+}
+html{height:100%}
+body{font-family:var(--font-sans);background:var(--bg-app);color:var(--text);font-size:13px;line-height:1.5;min-height:100%;-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--grey-100)}
+::-webkit-scrollbar-thumb{background:var(--grey-500);border-radius:4px}
+
+.tricolore{height:6px;background:linear-gradient(to right,#000091 0 33.33%,#fff 33.33% 66.66%,#E1000F 66.66% 100%)}
+.bloc-marque{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--bg-panel);border-bottom:1px solid var(--border)}
+.marianne{width:38px;height:38px;border-radius:50%;background:#000091;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;letter-spacing:.5px;flex-shrink:0;border:2px solid #E1000F}
+.bloc-marque-txt{font-size:11px;color:var(--grey-700);line-height:1.3}
+.bloc-marque-txt strong{display:block;color:var(--blue-marianne);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+.bloc-marque-devise{margin-left:auto;font-size:9px;color:var(--grey-500);text-transform:uppercase;letter-spacing:1.2px;text-align:right}
+.bloc-marque-devise em{display:block;font-style:normal}
+
+.topbar{background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:10px 16px;gap:12px;position:sticky;top:6px;z-index:100;flex-wrap:wrap;box-shadow:0 2px 6px rgba(0,0,0,.04)}
+.brand{font-size:14px;font-weight:800;color:var(--blue-marianne);display:flex;align-items:center;gap:8px;white-space:nowrap}
+.brand .dot{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px rgba(22,163,74,.2);animation:pulse 1.8s infinite;flex-shrink:0}
+.brand .dot.offline{background:var(--red-marianne);animation:none}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.brand .sub{color:var(--grey-500);font-weight:400;font-size:12px;font-family:var(--font-mono)}
+.topbar-right{margin-left:auto;display:flex;gap:12px;font-family:var(--font-mono);font-size:11px;align-items:center;flex-wrap:wrap}
+.topbar-stat{display:flex;gap:5px;color:var(--grey-700);align-items:center;white-space:nowrap}
+.topbar-stat .val{color:var(--blue-marianne);font-weight:700;padding:2px 6px;border-radius:3px;background:var(--blue-soft)}
+.topbar-stat .val.green{color:var(--green);background:var(--green-soft)}
+.topbar-stat .val.amber{color:#8a5e00;background:rgba(251,191,36,.2)}
+.topbar-stat .val.red{color:var(--red-marianne);background:var(--red-soft)}
+.theme-toggle,.settings-btn{background:var(--bg-panel);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.theme-toggle:hover{background:var(--blue-soft);border-color:var(--blue-marianne);transform:scale(1.05)}
+
+.app{display:grid;grid-template-columns:300px 1fr 300px;height:calc(100vh - 130px);overflow:hidden}
+.sidebar{background:var(--bg-panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.sb-head{padding:14px 16px;border-bottom:1px solid var(--border);background:var(--grey-50);flex-shrink:0}
+.sb-title{font-size:12px;font-weight:700;color:var(--blue-marianne);letter-spacing:.5px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.sb-title::before{content:'';width:4px;height:14px;background:var(--gold)}
+.sb-count{font-family:var(--font-mono);font-size:11px;color:var(--grey-500);margin-top:6px}
+.sb-list{flex:1;overflow-y:auto;padding:8px;min-height:0}
+
+.level-item{background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--grey-500);border-radius:4px;padding:8px 10px;margin-bottom:5px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:8px}
+.level-item:hover{border-color:var(--blue-marianne);background:var(--blue-soft);transform:translateX(2px)}
+.level-item.active{background:var(--blue-soft);border-color:var(--blue-marianne);border-left-color:var(--blue-marianne);box-shadow:0 0 0 2px var(--blue-soft)}
+.level-item.active .level-check{background:var(--blue-marianne);border-color:var(--blue-marianne);color:#fff}
+.level-check{width:16px;height:16px;border:2px solid var(--grey-500);border-radius:3px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;font-weight:700;color:transparent;transition:all .15s}
+.level-info{flex:1;min-width:0}
+.level-name{font-size:12px;font-weight:700;color:var(--text);line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic}
+.level-count{font-family:var(--font-mono);font-size:9px;color:var(--grey-500);text-transform:uppercase;margin-top:2px;letter-spacing:.5px}
+.level-count .badge{background:var(--blue-marianne);color:#fff;padding:1px 6px;border-radius:8px;font-weight:700;margin-right:4px}
+
+.drop-zone{border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;background:var(--grey-50);transition:all .2s;cursor:pointer;margin:12px}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--blue-marianne);background:var(--blue-soft)}
+.drop-zone .icon{font-size:32px;margin-bottom:8px}
+.drop-zone .title{font-weight:700;color:var(--blue-marianne);margin-bottom:4px;font-size:13px}
+.drop-zone .sub{font-size:11px;color:var(--grey-500)}
+
+.center{background:var(--bg-app);display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.search-bar{padding:14px 16px;background:var(--bg-panel);border-bottom:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.search-bar input[type=text]{flex:1;min-width:180px;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:11px 14px;font-size:14px;font-family:var(--font-sans);color:var(--text)}
+.search-bar input[type=text]:focus{outline:none;border-color:var(--blue-marianne);box-shadow:0 0 0 2px var(--blue-soft)}
+.search-bar select{background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:11px 12px;font-size:13px;font-family:var(--font-sans);color:var(--text)}
+.search-btn{background:var(--blue-marianne);color:#fff;border:1px solid var(--blue-marianne);font-size:13px;font-weight:700;padding:11px 20px;border-radius:4px;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:var(--font-sans)}
+.search-btn:hover{background:var(--blue-hi);border-color:var(--blue-hi)}
+
+.mode-tabs{display:flex;gap:0;padding:0 10px;border-bottom:1px solid var(--border);background:var(--bg-panel);flex-shrink:0;overflow-x:auto}
+.mode-tab{background:transparent;border:none;color:var(--grey-700);font-size:12px;font-weight:500;padding:10px 14px;cursor:pointer;transition:all .15s;border-bottom:3px solid transparent;font-family:var(--font-sans);white-space:nowrap}
+.mode-tab:hover{background:var(--grey-50);color:var(--blue-marianne)}
+.mode-tab.active{color:var(--blue-marianne);border-bottom-color:var(--blue-marianne);font-weight:700}
+
+.filters-bar{display:flex;gap:10px;padding:10px 16px;background:var(--blue-soft);border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:center;font-size:12px}
+.filters-bar[hidden]{display:none}
+.filter-label{font-weight:700;color:var(--blue-marianne);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.tag-chip{background:var(--bg-panel);color:var(--text);border:1px solid var(--border);padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;font-family:var(--font-mono)}
+.tag-chip:hover{border-color:var(--blue-marianne);color:var(--blue-marianne)}
+.tag-chip.active{background:var(--blue-marianne);color:#fff;border-color:var(--blue-marianne)}
+.tag-chip .ycount{opacity:.7;font-size:9px;margin-left:3px}
+.filters-clear{background:var(--red-soft);color:var(--red-marianne);border:1px solid var(--red-marianne);padding:5px 12px;border-radius:4px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-sans);margin-left:auto}
+.filters-clear:hover{background:var(--red-marianne);color:#fff}
+
+.kpi-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;padding:14px;background:var(--bg-panel);border-bottom:1px solid var(--border);flex-shrink:0}
+.kpi{background:var(--grey-50);border:1px solid var(--border);border-left:4px solid var(--blue-marianne);border-radius:4px;padding:10px 12px;transition:all .15s}
+.kpi:hover{border-color:var(--blue-marianne);background:var(--blue-soft);transform:translateY(-2px)}
+.kpi .label{font-size:9px;font-weight:700;color:var(--grey-500);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+.kpi .value{font-size:16px;font-weight:800;color:var(--blue-marianne);font-family:var(--font-mono);line-height:1.1;word-break:break-all}
+.kpi .sub{font-size:9px;color:var(--grey-500);margin-top:3px;font-family:var(--font-mono)}
+.kpi.green{border-left-color:var(--green)} .kpi.green .value{color:var(--green)}
+.kpi.amber{border-left-color:var(--gold)} .kpi.amber .value{color:#8a5e00}
+.kpi.red{border-left-color:var(--red-marianne)} .kpi.red .value{color:var(--red-marianne)}
+
+.results{flex:1;overflow-y:auto;padding:14px;min-height:0}
+.result-card{background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--blue-marianne);border-radius:4px;padding:14px 16px;margin-bottom:10px;transition:all .15s;animation:fadeInUp .35s ease-out}
+.result-card:hover{border-color:var(--blue-marianne);box-shadow:0 4px 12px rgba(0,0,145,.08);transform:translateX(2px)}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeInLeft{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+@keyframes popIn{from{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}
+.rc-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:6px}
+.rc-title{font-size:14px;font-weight:700;color:var(--text);flex:1;line-height:1.35;font-style:italic}
+.rc-badges{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0}
+.rc-badge{font-family:var(--font-mono);font-size:9px;font-weight:700;padding:3px 7px;border-radius:3px;text-transform:uppercase;white-space:nowrap;letter-spacing:.5px}
+.rc-badge.niveau{background:var(--blue-marianne);color:#fff}
+.rc-badge.disc{background:var(--gold);color:#1e1e1e;text-transform:none}
+.rc-badge.voie{background:var(--green);color:#fff;text-transform:none}
+.rc-badge.year{background:var(--blue-soft);color:var(--blue-marianne)}
+.rc-badge.abroge{background:var(--red-marianne);color:#fff}
+.rc-badge.vigueur{background:var(--green-soft);color:var(--green)}
+.rc-org{color:var(--grey-700);font-weight:600;font-size:12px;margin-bottom:6px}
+.rc-meta{display:flex;gap:6px;font-family:var(--font-mono);font-size:10px;color:var(--grey-500);flex-wrap:wrap;margin-top:8px}
+.rc-meta .tag{background:var(--grey-50);padding:3px 8px;border-radius:3px;border:1px solid var(--border);color:var(--grey-700)}
+.rc-meta a{color:var(--blue-marianne);text-decoration:none;font-weight:700}
+
+.empty,.loading{text-align:center;padding:60px 20px;color:var(--grey-500);font-size:14px}
+
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;padding:4px}
+.cat-card{background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--gold);border-radius:4px;padding:12px 14px;cursor:pointer;transition:all .15s;animation:fadeInUp .35s ease-out}
+.cat-card:hover{border-color:var(--blue-marianne);box-shadow:0 4px 12px rgba(0,0,145,.1);transform:translateY(-2px)}
+.cat-head{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px}
+.cat-name{font-size:13px;font-weight:700;color:var(--text);line-height:1.3}
+.cat-count-badge{font-family:var(--font-mono);font-size:10px;font-weight:700;background:var(--blue-marianne);color:#fff;padding:2px 7px;border-radius:3px;white-space:nowrap}
+.cat-stats{display:flex;gap:8px;font-size:10px;font-family:var(--font-mono);color:var(--grey-700);flex-wrap:wrap;margin-top:6px}
+.cat-stats .cat-stat{background:var(--grey-50);padding:3px 7px;border-radius:3px;border:1px solid var(--border)}
+
+.bar-row{display:grid;grid-template-columns:180px 1fr 60px;align-items:center;gap:8px;margin-bottom:8px;font-size:11px;animation:fadeInLeft .35s ease-out backwards}
+.bar-row .name{color:var(--grey-700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--font-mono);font-weight:600}
+.bar-track{background:var(--grey-100);border-radius:3px;height:18px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,var(--blue-marianne) 0%,var(--blue-hi) 100%);border-radius:3px;width:0;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.bar-fill.gold{background:linear-gradient(90deg,#8a5e00 0%,var(--gold) 100%)}
+.bar-fill.green{background:linear-gradient(90deg,var(--green) 0%,#22c55e 100%)}
+.bar-row .val{text-align:right;font-variant-numeric:tabular-nums;color:var(--blue-marianne);font-weight:700;font-family:var(--font-mono)}
+
+.pie-container{display:flex;gap:20px;flex-wrap:wrap;align-items:flex-start;padding:8px}
+.pie-svg-wrap{position:relative;flex-shrink:0}
+.pie-svg{display:block;overflow:visible}
+.pie-slice{transition:all .25s ease;cursor:pointer;stroke:var(--bg-panel);stroke-width:1.5;opacity:0;animation:popIn .5s ease-out forwards}
+.pie-slice:hover{filter:brightness(1.15)}
+.pie-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.pie-center .pie-total{font-size:22px;font-weight:800;color:var(--blue-marianne);font-family:var(--font-mono);line-height:1}
+.pie-center .pie-label{font-size:9px;color:var(--grey-500);text-transform:uppercase;letter-spacing:.6px;margin-top:3px}
+.pie-legend{flex:1;min-width:240px;max-height:420px;overflow-y:auto}
+.pie-legend-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;cursor:pointer;transition:all .15s;font-size:12px}
+.pie-legend-item:hover{background:var(--grey-50)}
+.pie-legend-color{width:14px;height:14px;border-radius:3px;flex-shrink:0;border:1px solid rgba(0,0,0,.1)}
+.pie-legend-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pie-legend-val{font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--blue-marianne);white-space:nowrap}
+.pie-legend-pct{font-family:var(--font-mono);font-size:10px;color:var(--grey-500);white-space:nowrap;min-width:44px;text-align:right}
+
+.analytics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:14px}
+.analytics-panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;overflow:hidden;animation:fadeInUp .35s ease-out}
+.analytics-panel .panel-head{padding:11px 14px;background:var(--grey-50);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--blue-marianne);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+.analytics-panel .panel-head::before{content:'';width:4px;height:12px;background:var(--gold)}
+.analytics-panel .panel-body{padding:14px}
+
+.matrix-wrap{overflow-x:auto;padding:4px}
+.matrix{width:100%;border-collapse:collapse;font-size:11px}
+.matrix th,.matrix td{padding:6px 8px;border:1px solid var(--border);text-align:center}
+.matrix th{background:var(--blue-marianne);color:#fff;font-weight:700;position:sticky;top:0;z-index:1}
+.matrix th.row-head{text-align:left;background:var(--blue-soft);color:var(--blue-marianne);position:sticky;left:0;z-index:2;min-width:180px;max-width:220px}
+.matrix td.row-head{text-align:left;background:var(--grey-50);font-weight:600;color:var(--grey-700);position:sticky;left:0;z-index:1;min-width:180px}
+.matrix td.cell{cursor:pointer;transition:all .15s;font-family:var(--font-mono);font-weight:700}
+.matrix td.cell:hover{transform:scale(1.05);border-color:var(--blue-marianne)}
+.matrix td.cell.zero{color:var(--grey-500);background:var(--grey-50);cursor:default}
+.matrix td.cell.zero:hover{transform:none;border-color:var(--border)}
+
+.vertu{margin-bottom:7px}
+.vertu-entete{display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px}
+.vertu-nom{font-weight:600;color:var(--grey-700)}
+.vertu-score{color:var(--blue-marianne);font-weight:700;font-family:var(--font-mono);font-size:11px}
+.barre{height:8px;background:var(--grey-100);border-radius:4px;overflow:hidden}
+.barre-remplie{height:100%;background:linear-gradient(90deg,var(--blue-marianne),var(--red-marianne));border-radius:4px;transition:width .5s ease}
+
+details{border:1px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden}
+summary{padding:9px 12px;cursor:pointer;background:var(--grey-50);color:var(--blue-marianne);font-weight:600;font-size:12px;user-select:none}
+summary:hover{background:var(--blue-soft)}
+.compound-table{width:100%;border-collapse:collapse;font-size:12px}
+.compound-table th{text-align:left;padding:6px 10px;background:var(--blue-marianne);color:#fff;font-weight:600;position:sticky;top:0}
+.compound-table td{padding:5px 10px;border-bottom:1px solid var(--grey-100)}
+.compound-table td.pct{text-align:right;font-weight:700;color:var(--blue-marianne);font-family:var(--font-mono)}
+
+.right{background:var(--bg-panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.rs-head{padding:14px 16px;border-bottom:1px solid var(--border);background:var(--grey-50);font-size:12px;font-weight:700;color:var(--blue-marianne);letter-spacing:.5px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.rs-head::before{content:'';width:4px;height:14px;background:var(--gold)}
+.rs-body{flex:1;overflow-y:auto;padding:12px;min-height:0}
+.intel-panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;margin-bottom:10px;overflow:hidden}
+.intel-head{padding:9px 12px;background:var(--grey-50);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;color:var(--blue-marianne);letter-spacing:.5px;text-transform:uppercase}
+.intel-body{padding:10px}
+.intel-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--grey-100);font-size:12px;gap:8px}
+.intel-row:last-child{border-bottom:none}
+.intel-row .k{color:var(--grey-700);flex-shrink:0}
+.intel-row .v{color:var(--text);font-weight:700;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:170px;font-family:var(--font-mono);font-size:11px}
+.intel-row .v.cyan{color:var(--blue-marianne)}
+.intel-row .v.green{color:var(--green)}
+.intel-row .v.amber{color:#8a5e00}
+.intel-row .v.red{color:var(--red-marianne)}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--grey-900);color:#fff;padding:12px 20px;border-radius:6px;font-size:13px;font-weight:600;z-index:1000;box-shadow:0 8px 24px rgba(0,0,0,.2);animation:slideInRight .3s ease-out;max-width:400px}
+.toast.success{background:var(--green)}
+.toast.error{background:var(--red-marianne)}
+.toast.info{background:var(--blue-marianne)}
+@keyframes slideInRight{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+.burger-menu{display:none;background:var(--bg-panel);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:6px;cursor:pointer;font-size:16px;align-items:center;justify-content:center}
+.mobile-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200}
+.mobile-overlay.visible{display:block}
+
+@media(max-width:900px){
+  .app{display:flex;flex-direction:column;height:auto}
+  .sidebar{position:fixed;top:0;left:0;bottom:0;width:300px;max-width:85vw;z-index:300;transform:translateX(-100%);transition:transform .3s ease-out;box-shadow:8px 0 24px rgba(0,0,0,.15)}
+  .sidebar.open{transform:translateX(0)}
+  .right{width:100%;border-left:none;border-top:1px solid var(--border)}
+  .results{max-height:70vh}
+  .burger-menu{display:flex}
+  .brand .sub{display:none}
+  .analytics-grid{grid-template-columns:1fr}
+  .pie-container{flex-direction:column;align-items:center}
+  .pie-legend{min-width:100%}
+  .toast{bottom:12px;right:12px;left:12px;max-width:none}
+}
+</style>
+</head>
+<body>
+
+<div class="tricolore"></div>
+
+<div class="bloc-marque">
+  <button class="burger-menu" id="burgerMenu" title="Menu">☰</button>
+  <div class="marianne">RF</div>
+  <div class="bloc-marque-txt">
+    <strong>Ministère de la Santé · République Française</strong>
+    Monitor Huiles Essentielles — Base sCentInDB
+  </div>
+  <div class="bloc-marque-devise"><em>Liberté</em><em>Égalité</em><em>Fraternité</em></div>
+</div>
+
+<div class="topbar">
+  <div class="brand"><span class="dot" id="statusDot"></span>MONITOR HUILES ESSENTIELLES <span class="sub">/ sCentInDB</span></div>
+  <div class="topbar-right">
+    <div class="topbar-stat"><span>SOURCE</span><span class="val" id="tbSource">—</span></div>
+    <div class="topbar-stat"><span>PLANTES</span><span class="val amber" id="tbCount">—</span></div>
+    <div class="topbar-stat"><span>COMPOSÉS</span><span class="val green" id="tbDisc">—</span></div>
+    <div class="topbar-stat"><span>VERTUS</span><span class="val" id="tbNiveaux">—</span></div>
+    <button class="theme-toggle" id="themeToggle" title="Basculer thème">🌙</button>
+  </div>
+</div>
+
+<div class="mobile-overlay" id="mobileOverlay"></div>
+
+<div class="app">
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-head">
+      <div class="sb-title">🌿 Plantes médicinales</div>
+      <div class="sb-count" id="sbCount">Chargez un fichier JSON</div>
+    </div>
+    <div class="sb-list" id="sbList">
+      <div class="loading" style="padding:20px;font-size:11px">Aucune plante détectée.</div>
+    </div>
+    <div class="drop-zone" id="dropZone">
+      <div class="icon">📁</div>
+      <div class="title">Glissez-déposez ScentInDB.json</div>
+      <div class="sub">ou cliquez pour choisir un fichier</div>
+      <input type="file" id="fileInput" accept=".json" style="display:none">
+    </div>
+  </aside>
+
+  <main class="center">
+    <div class="search-bar">
+      <input type="text" id="queryInput" placeholder="🔍 Rechercher (plante, composé, vertu, thérapie…)" autocomplete="off">
+      <select id="sortSelect">
+        <option value="compound_desc">Composés ↓</option>
+        <option value="compound_asc">Composés ↑</option>
+        <option value="name_asc">Nom A→Z</option>
+        <option value="name_desc">Nom Z→A</option>
+      </select>
+      <button class="search-btn" id="searchBtn">▶ CHARGER</button>
+    </div>
+
+    <div class="mode-tabs">
+      <button class="mode-tab active" data-view="results">🌿 Plantes</button>
+      <button class="mode-tab" data-view="categories">📂 Familles</button>
+      <button class="mode-tab" data-view="matrix">🔲 Matrice Plante×Vertu</button>
+      <button class="mode-tab" data-view="analytics">📊 Analyses</button>
+      <button class="mode-tab" data-view="timeline">📈 Top composés</button>
+      <button class="mode-tab" data-view="quality">🔍 Qualité</button>
+    </div>
+
+    <div class="filters-bar" id="filtersBar" hidden>
+      <div class="filter-group">
+        <span class="filter-label">💊 Vertus :</span>
+        <div id="vertuTags" style="display:flex;gap:5px;flex-wrap:wrap"></div>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">🌿 Parties :</span>
+        <select id="voieSelect" style="background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;padding:6px 10px;font-size:12px">
+          <option value="">— Toutes —</option>
+        </select>
+      </div>
+      <button class="filters-clear" id="filtersClear" hidden>✖ Tout effacer</button>
+    </div>
+
+    <div class="kpi-strip" id="kpiStrip"></div>
+
+    <div class="results" id="resultsArea">
+      <div class="empty">
+        <div style="font-size:48px;margin-bottom:16px">🇫🇷</div>
+        <div style="font-weight:700;color:var(--text);margin-bottom:8px;font-size:16px">Monitor Huiles Essentielles</div>
+        <div>Chargez <strong>ScentInDB.json</strong> depuis la barre latérale.</div>
+      </div>
+    </div>
+
+    <div class="export-group" style="display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--border);background:var(--bg-panel);flex-wrap:wrap">
+      <button class="export-btn" id="exportCsv" disabled style="flex:1;min-width:100px;background:var(--bg-panel);color:var(--text);border:1px solid var(--border);font-size:12px;font-weight:600;padding:10px 14px;border-radius:4px;cursor:pointer">📥 CSV</button>
+      <button class="export-btn" id="exportJson" disabled style="flex:1;min-width:100px;background:var(--bg-panel);color:var(--text);border:1px solid var(--border);font-size:12px;font-weight:600;padding:10px 14px;border-radius:4px;cursor:pointer">📥 JSON</button>
+      <button class="export-btn" id="clearBtn" style="flex:1;min-width:100px;background:var(--bg-panel);color:var(--text);border:1px solid var(--border);font-size:12px;font-weight:600;padding:10px 14px;border-radius:4px;cursor:pointer">🗑️ Effacer</button>
+    </div>
+  </main>
+
+  <aside class="right">
+    <div class="rs-head">Intelligence Huiles</div>
+    <div class="rs-body">
+      <div class="intel-panel">
+        <div class="intel-head">💚 ENVIRONNEMENT</div>
+        <div class="intel-body">
+          <div class="intel-row"><span class="k">Source</span><span class="v cyan" id="ivSource">—</span></div>
+          <div class="intel-row"><span class="k">Statut</span><span class="v green" id="ivStatus">—</span></div>
+          <div class="intel-row"><span class="k">Chargé le</span><span class="v" id="ivDate">—</span></div>
+        </div>
+      </div>
+      <div class="intel-panel">
+        <div class="intel-head">📊 TOTAL CHARGÉ</div>
+        <div class="intel-body">
+          <div class="intel-row"><span class="k">Plantes</span><span class="v cyan" id="ivTotal">—</span></div>
+          <div class="intel-row"><span class="k">Composés</span><span class="v green" id="ivNiveaux">—</span></div>
+          <div class="intel-row"><span class="k">Vertus</span><span class="v amber" id="ivDisc">—</span></div>
+          <div class="intel-row"><span class="k">Thérapies</span><span class="v" id="ivVoies">—</span></div>
+          <div class="intel-row"><span class="k">Usages</span><span class="v amber" id="ivYears">—</span></div>
+          <div class="intel-row"><span class="k">Odeurs</span><span class="v red" id="ivAbroges">—</span></div>
+        </div>
+      </div>
+      <div class="intel-panel">
+        <div class="intel-head">🏆 TOP VERTUS INFÉRÉES</div>
+        <div class="intel-body" id="topDisc">
+          <div style="text-align:center;color:var(--grey-500);font-size:11px;padding:8px">Chargez des données</div>
+        </div>
+      </div>
+      <div class="intel-panel">
+        <div class="intel-head">🌿 TOP FAMILLES BOTANIQUES</div>
+        <div class="intel-body" id="yearsSummary">
+          <div style="text-align:center;color:var(--grey-500);font-size:11px;padding:8px">Chargez des données</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<script>
+/* =========================================================
+   MONITOR HUILES ESSENTIELLES — sCentInDB
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtNum = n => new Intl.NumberFormat('fr-FR').format(n || 0);
+const safeSet = (id, v, cls) => { const e = $(id); if (!e) return; if (v !== undefined) e.textContent = v; if (cls !== undefined) e.className = cls; return e; };
+
+const PIE_COLORS = ['#000091','#E1000F','#16a34a','#fbbf24','#8B5CF6','#EC4899','#06B6D4','#F97316','#18753c','#6366F1','#14B8A6','#EF4444','#A855F7','#0EA5E9','#F59E0B','#10B981','#3B82F6','#84CC16','#D946EF','#FB7185'];
+const colorForIdx = i => PIE_COLORS[i % PIE_COLORS.length];
+
+const state = {
+  all: [], filtered: [], source: '—', loadedAt: null,
+  selectedPlants: new Set(), selectedVertus: new Set(), selectedPart: null,
+  page: 1, pageSize: 30, theme: localStorage.getItem('monitor-he-theme') || 'light'
+};
+
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', state.theme);
+  const b = $('themeToggle'); if (b) b.textContent = state.theme === 'dark' ? '☀️' : '🌙';
+}
+function toggleTheme(){
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  localStorage.setItem('monitor-he-theme', state.theme);
+  applyTheme();
+  if (state.all.length) renderResults();
+}
+
+/* ============ CHARGEMENT FICHIER ============ */
+function setupDropZone(){
+  const dz = $('dropZone'), fi = $('fileInput');
+  if (!dz || !fi) return;
+  dz.addEventListener('click', () => fi.click());
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+  dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('dragover'); handleFile(e.dataTransfer.files[0]); });
+  fi.addEventListener('change', e => handleFile(e.target.files[0]));
+}
+
+function handleFile(file){
+  if (!file){ toast('❌ Aucun fichier', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      let data = JSON.parse(reader.result);
+      if (!Array.isArray(data)){
+        if (data.plants) data = data.plants;
+        else if (data.records) data = data.records;
+        else data = Object.values(data);
+      }
+      loadData(data, file.name);
+    } catch(err){
+      toast('❌ JSON invalide : ' + err.message, 'error', 6000);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function loadData(data, sourceName){
+  state.all = data.map(normalizePlant);
+  state.source = sourceName;
+  state.loadedAt = new Date();
+  state.selectedPlants.clear();
+  state.selectedVertus.clear();
+  state.selectedPart = null;
+
+  safeSet('tbSource', sourceName.slice(0, 18), 'val green');
+  safeSet('ivSource', sourceName, 'v cyan');
+  safeSet('ivStatus', '● CHARGÉ', 'v green');
+  safeSet('ivDate', state.loadedAt.toLocaleString('fr-FR'));
+
+  const dot = $('statusDot'); if (dot) dot.classList.remove('offline');
+
+  updateStats();
+  populatePlants();
+  populatePartSelect();
+  populateVertuTags();
+  applyFilters(1);
+  toast(`🇫🇷 ${fmtNum(state.all.length)} plantes chargées`, 'success', 4000);
+}
+
+function normalizePlant(p){
+  const totalCompounds = (p.oils || []).reduce((s, o) => s + (o.compound_count || 0), 0);
+  return {
+    plant: p.plant || '—',
+    parts: p.parts || [],
+    oils: p.oils || [],
+    therapies: p.therapies || [],
+    uses: p.uses || [],
+    odor_color: p.odor_color || [],
+    vertus: p.vertus || [],
+    vertus_inferees: p.vertus_inferees || {},
+    compoundCount: totalCompounds,
+    oilCount: (p.oils || []).length
+  };
+}
+
+/* ============ STATS ============ */
+function updateStats(){
+  const total = state.all.length;
+  const compounds = state.all.reduce((s, p) => s + p.compoundCount, 0);
+  const vertus = new Set();
+  const therapies = new Set();
+  const uses = new Set();
+  const odors = new Set();
+  for (const p of state.all){
+    p.vertus.forEach(v => vertus.add(v));
+    p.therapies.forEach(t => therapies.add(t));
+    p.uses.forEach(u => uses.add(u));
+    p.odor_color.forEach(o => { if (o.odor) odors.add(o.odor); });
+  }
+
+  safeSet('tbCount', fmtNum(total));
+  safeSet('tbDisc', fmtNum(compounds));
+  safeSet('tbNiveaux', fmtNum(vertus.size));
+  safeSet('ivTotal', fmtNum(total));
+  safeSet('ivNiveaux', fmtNum(compounds));
+  safeSet('ivDisc', fmtNum(vertus.size));
+  safeSet('ivVoies', fmtNum(therapies.size));
+  safeSet('ivYears', fmtNum(uses.size));
+  safeSet('ivAbroges', fmtNum(odors.size));
+
+  renderTopVertus();
+  renderTopFamilles();
+}
+
+function renderTopVertus(){
+  const el = $('topDisc');
+  if (!el) return;
+  if (!state.all.length){
+    el.innerHTML = '<div style="text-align:center;color:var(--grey-500);font-size:11px;padding:8px">Chargez des données</div>';
+    return;
+  }
+  const counts = {};
+  for (const p of state.all) for (const v of p.vertus) counts[v] = (counts[v] || 0) + 1;
+  const top = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, 8);
+  const max = Math.max(...top.map(x => x[1]), 1);
+  el.innerHTML = top.map(([k, v]) => {
+    const pct = (v / max) * 100;
+    return `<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+        <span style="font-weight:600;color:var(--grey-700);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:170px" title="${escapeHtml(k)}">${escapeHtml(k)}</span>
+        <span style="font-family:var(--font-mono);font-weight:700;color:var(--blue-marianne);font-size:10px">${v}</span>
+      </div>
+      <div style="background:var(--grey-100);height:6px;border-radius:3px;overflow:hidden">
+        <div class="anim-bar" style="width:0%;height:100%;background:var(--gold);border-radius:3px;transition:width 1s cubic-bezier(.4,0,.2,1)" data-w="${pct}%"></div>
+      </div>
+    </div>`;
+  }).join('');
+  requestAnimationFrame(() => el.querySelectorAll('.anim-bar').forEach(b => b.style.width = b.dataset.w));
+}
+
+function renderTopFamilles(){
+  const el = $('yearsSummary');
+  if (!el) return;
+  if (!state.all.length){
+    el.innerHTML = '<div style="text-align:center;color:var(--grey-500);font-size:11px;padding:8px">Chargez des données</div>';
+    return;
+  }
+  // Compter les classes chimiques majoritaires
+  const counts = {};
+  for (const p of state.all){
+    const classes = new Set();
+    for (const o of p.oils){
+      for (const c of (o.compounds || []).slice(0, 5)){
+        if (c.class) classes.add(c.class);
+      }
+    }
+    for (const c of classes) counts[c] = (counts[c] || 0) + 1;
+  }
+  const top = Object.entries(counts).sort((a,b) => b[1] - a[1]).slice(0, 8);
+  if (!top.length){
+    el.innerHTML = '<div style="text-align:center;color:var(--grey-500);font-size:11px;padding:8px">Pas de classes détectées</div>';
+    return;
+  }
+  const max = Math.max(...top.map(x => x[1]), 1);
+  el.innerHTML = top.map(([y, c]) => {
+    const pct = (c / max) * 100;
+    return `<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px">
+        <span style="font-family:var(--font-mono);font-weight:700;color:var(--blue-marianne);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:170px" title="${escapeHtml(y)}">${escapeHtml(y)}</span>
+        <span style="font-family:var(--font-mono);color:var(--text);font-size:10px">${c}</span>
+      </div>
+      <div style="background:var(--grey-100);height:6px;border-radius:3px;overflow:hidden">
+        <div style="width:${pct}%;height:100%;background:var(--blue-marianne);border-radius:3px"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ============ LISTE PLANTES ============ */
+function populatePlants(){
+  const el = $('sbList');
+  if (!el) return;
+  const sorted = [...state.all].sort((a, b) => b.compoundCount - a.compoundCount);
+  if (!sorted.length){
+    el.innerHTML = '<div class="loading" style="padding:20px;font-size:11px">Aucune plante détectée.</div>';
+    safeSet('sbCount', '0 plante');
+    return;
+  }
+  safeSet('sbCount', `${sorted.length} plantes · ${fmtNum(state.all.reduce((s,p)=>s+p.compoundCount,0))} composés`);
+  el.innerHTML = sorted.map(p => {
+    const active = state.selectedPlants.has(p.plant);
+    return `<div class="level-item ${active ? 'active' : ''}" data-plant="${escapeHtml(p.plant)}">
+      <div class="level-check">✓</div>
+      <div class="level-info">
+        <div class="level-name" title="${escapeHtml(p.plant)}">${escapeHtml(p.plant)}</div>
+        <div class="level-count"><span class="badge">${p.compoundCount}</span>composés</div>
+      </div>
+    </div>`;
+  }).join('');
+  el.querySelectorAll('.level-item').forEach(item => {
+    item.addEventListener('click', e => {
+      const plant = item.dataset.plant;
+      if (e.ctrlKey || e.metaKey){
+        if (state.selectedPlants.has(plant)) state.selectedPlants.delete(plant);
+        else state.selectedPlants.add(plant);
+      } else {
+        if (state.selectedPlants.size === 1 && state.selectedPlants.has(plant)) state.selectedPlants.clear();
+        else state.selectedPlants = new Set([plant]);
+      }
+      populatePlants();
+      applyFilters(1);
+    });
+  });
+}
+
+/* ============ FILTRES ============ */
+function populatePartSelect(){
+  const sel = $('voieSelect');
+  if (!sel) return;
+  const parts = new Set();
+  for (const p of state.all) for (const part of p.parts) parts.add(part);
+  sel.innerHTML = '<option value="">— Toutes —</option>' +
+    [...parts].sort().map(v => `<option value="${escapeHtml(v)}" ${state.selectedPart === v ? 'selected' : ''}>${escapeHtml(v)}</option>`).join('');
+  sel.value = state.selectedPart || '';
+}
+
+function populateVertuTags(){
+  const el = $('vertuTags');
+  if (!el) return;
+  const counts = {};
+  for (const p of state.all) for (const v of p.vertus) counts[v] = (counts[v] || 0) + 1;
+  const vertus = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 20);
+  if (!vertus.length){ el.innerHTML = '<span style="color:var(--grey-500);font-size:11px">—</span>'; return; }
+  el.innerHTML = vertus.map(([v, c]) => {
+    const active = state.selectedVertus.has(v);
+    return `<span class="tag-chip ${active ? 'active' : ''}" data-vertu="${escapeHtml(v)}">${escapeHtml(v)}<span class="ycount">(${c})</span></span>`;
+  }).join('');
+  el.querySelectorAll('.tag-chip').forEach(t => {
+    t.addEventListener('click', e => {
+      const v = t.dataset.vertu;
+      if (e.ctrlKey || e.metaKey){
+        if (state.selectedVertus.has(v)) state.selectedVertus.delete(v);
+        else state.selectedVertus.add(v);
+      } else {
+        if (state.selectedVertus.size === 1 && state.selectedVertus.has(v)) state.selectedVertus.clear();
+        else state.selectedVertus = new Set([v]);
+      }
+      populateVertuTags();
+      applyFilters(1);
+    });
+  });
+}
+
+function applyFilters(page = 1){
+  const q = $('queryInput')?.value.toLowerCase().trim() || '';
+  const sort = $('sortSelect')?.value || 'compound_desc';
+  state.page = page;
+
+  state.filtered = state.all.filter(p => {
+    if (state.selectedPlants.size && !state.selectedPlants.has(p.plant)) return false;
+    if (state.selectedPart && !p.parts.includes(state.selectedPart)) return false;
+    if (state.selectedVertus.size){
+      for (const v of state.selectedVertus) if (!p.vertus.includes(v)) return false;
+    }
+    if (!q) return true;
+    // Recherche large : plante + composés + vertus + thérapies + usages
+    const hay = [
+      p.plant,
+      ...p.vertus,
+      ...p.therapies,
+      ...p.uses,
+      ...p.oils.flatMap(o => (o.compounds || []).map(c => c.name || ''))
+    ].join(' ').toLowerCase();
+    return hay.includes(q);
+  });
+
+  state.filtered.sort((a, b) => {
+    switch(sort){
+      case 'compound_desc': return b.compoundCount - a.compoundCount;
+      case 'compound_asc':  return a.compoundCount - b.compoundCount;
+      case 'name_asc': return String(a.plant).localeCompare(String(b.plant));
+      case 'name_desc': return String(b.plant).localeCompare(String(a.plant));
+      default: return 0;
+    }
+  });
+
+  const hasFilter = state.selectedPlants.size || state.selectedVertus.size || state.selectedPart;
+  const fc = $('filtersClear'); if (fc) fc.hidden = !hasFilter;
+  const fb = $('filtersBar'); if (fb) fb.hidden = !state.all.length;
+
+  const eCsv = $('exportCsv'), eJson = $('exportJson');
+  if (eCsv) eCsv.disabled = !state.filtered.length;
+  if (eJson) eJson.disabled = !state.filtered.length;
+
+  renderKPIs(state.filtered);
+  renderResults();
+}
+
+/* ============ KPI ============ */
+function renderKPIs(data){
+  const count = data.length;
+  const compounds = data.reduce((s, p) => s + p.compoundCount, 0);
+  const vertus = new Set(); const therapies = new Set(); const odors = new Set();
+  for (const p of data){
+    p.vertus.forEach(v => vertus.add(v));
+    p.therapies.forEach(t => therapies.add(t));
+    p.odor_color.forEach(o => { if (o.odor) odors.add(o.odor); });
+  }
+  const kpis = [
+    { label: 'Plantes', value: fmtNum(count), sub: 'filtrées', cls: '' },
+    { label: 'Composés', value: fmtNum(compounds), sub: 'au total', cls: 'amber' },
+    { label: 'Vertus', value: fmtNum(vertus.size), sub: 'distinctes', cls: 'green' },
+    { label: 'Thérapies', value: fmtNum(therapies.size), sub: 'documentées', cls: 'amber' },
+    { label: 'Odeurs', value: fmtNum(odors.size), sub: 'décrites', cls: 'red' }
+  ];
+  const strip = $('kpiStrip');
+  if (!strip) return;
+  strip.innerHTML = kpis.map(k => `<div class="kpi ${k.cls}"><div class="label">${k.label}</div><div class="value">${k.value}</div><div class="sub">${k.sub}</div></div>`).join('');
+}
+
+/* ============ RENDU PRINCIPAL ============ */
+function renderResults(){
+  const view = document.querySelector('.mode-tab.active')?.dataset.view || 'results';
+  const area = $('resultsArea');
+  if (!area) return;
+  if (view === 'analytics') return renderAnalytics();
+  if (view === 'categories') return renderCategories();
+  if (view === 'matrix') return renderMatrix();
+  if (view === 'timeline') return renderTimeline();
+  if (view === 'quality') return renderQuality();
+
+  const slice = state.filtered.slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
+  if (!slice.length){
+    area.innerHTML = state.all.length
+      ? `<div class="empty">Aucune plante ne correspond aux critères.<br><button onclick="$('filtersClear').click()" style="margin-top:14px;padding:8px 16px;background:var(--blue-marianne);color:#fff;border:none;border-radius:4px;cursor:pointer;font-weight:700">✖ Effacer les filtres</button></div>`
+      : `<div class="empty"><div style="font-size:48px;margin-bottom:16px">🇫🇷</div><div style="font-weight:700;margin-bottom:8px">Aucune plante chargée</div><div>Glissez <strong>ScentInDB.json</strong> dans la zone à gauche.</div></div>`;
+    return;
+  }
+
+  const header = `<div style="font-size:12px;color:var(--grey-700);margin-bottom:12px;padding:10px 14px;background:var(--bg-panel);border-radius:4px;border-left:4px solid var(--blue-marianne);box-shadow:0 1px 3px rgba(0,0,0,.04)">
+    <strong style="color:var(--blue-marianne)">${fmtNum(state.filtered.length)} plante(s)</strong> · page ${state.page} / ${Math.max(1, Math.ceil(state.filtered.length / state.pageSize))}
+  </div>`;
+
+  const cards = slice.map(p => {
+    const topCompounds = p.oils[0]?.compounds?.slice(0, 3).map(c => c.name).filter(Boolean) || [];
+    const topVertus = p.vertus.slice(0, 5);
+    const therapies = p.therapies.slice(0, 4);
+    return `<div class="result-card">
+      <div class="rc-head">
+        <div class="rc-title">${escapeHtml(p.plant)}</div>
+        <div class="rc-badges">
+          <span class="rc-badge niveau">${p.compoundCount} composés</span>
+          <span class="rc-badge disc">${p.oilCount} profil(s)</span>
+          ${topVertus.length ? `<span class="rc-badge voie">${topVertus.length} vertus</span>` : ''}
+          ${therapies.length ? `<span class="rc-badge vigueur">${therapies.length} thérapies</span>` : ''}
+        </div>
+      </div>
+      ${topVertus.length ? `<div class="rc-org">🧪 ${topVertus.map(v => escapeHtml(v)).join(' · ')}</div>` : ''}
+      ${topCompounds.length ? `<div style="font-size:11px;color:var(--grey-500);font-family:var(--font-mono);margin-top:4px">Top: ${topCompounds.map(c => escapeHtml(c)).join(', ')}</div>` : ''}
+      <div class="rc-meta">
+        <span class="tag">📅 ${p.parts.length} partie(s)</span>
+        ${p.odor_color.length ? `<span class="tag">🎨 ${escapeHtml(p.odor_color[0]?.color || '—')}</span>` : ''}
+        ${p.odor_color.length && p.odor_color[0]?.odor ? `<span class="tag">👃 ${escapeHtml(p.odor_color[0].odor)}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+  area.innerHTML = header + cards;
+  // Clic sur carte = détail
+  area.querySelectorAll('.result-card').forEach((el, i) => {
+    el.addEventListener('click', () => afficherFiche(slice[i]));
+  });
+}
+
+/* ============ FICHE DÉTAILLÉE (modal-like) ============ */
+function afficherFiche(p){
+  const area = $('resultsArea');
+  const totalComp = p.compoundCount;
+  const vertusHtml = Object.entries(p.vertus_inferees).slice(0, 12).map(([v, s]) => {
+    const pct = Math.round(s * 100);
+    return `<div class="vertu">
+      <div class="vertu-entete"><span class="vertu-nom">${escapeHtml(v)}</span><span class="vertu-score">${pct}%</span></div>
+      <div class="barre"><div class="barre-remplie" style="width:${Math.min(pct, 100)}%"></div></div>
+    </div>`;
+  }).join('');
+
+  const oilsHtml = p.oils.map((oil, i) => {
+    const label = [oil.part, oil.subpart].filter(Boolean).join(' / ') || 'huile';
+    const rows = (oil.compounds || []).filter(c => c.percent != null).sort((a,b) => b.percent - a.percent).slice(0, 30).map(c =>
+      `<tr><td style="font-style:italic">${escapeHtml(c.name || '—')}</td><td class="pct">${c.percent}%</td><td style="font-family:var(--font-mono);font-size:10px">${escapeHtml(c.formula || '')}</td></tr>`
+    ).join('');
+    return `<details ${i === 0 ? 'open' : ''}>
+      <summary>${escapeHtml(label)} — ${oil.compound_count} composés (${oil.total_percent || 0}%)</summary>
+      <table class="compound-table"><thead><tr><th>Composé</th><th style="text-align:right">%</th><th>Formule</th></tr></thead><tbody>${rows}</tbody></table>
+    </details>`;
+  }).join('');
+
+  area.innerHTML = `
+    <button onclick="renderResults()" style="margin-bottom:12px;padding:6px 14px;background:var(--bg-panel);border:1px solid var(--border);border-radius:4px;cursor:pointer;font-weight:700;color:var(--blue-marianne)">← Retour à la liste</button>
+    <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--blue-marianne);border-radius:6px;padding:16px 20px;margin-bottom:14px">
+      <h2 style="font-style:italic;color:var(--blue-marianne);font-size:20px;margin-bottom:6px">${escapeHtml(p.plant)}</h2>
+      <div style="color:var(--grey-500);font-size:12px;margin-bottom:12px">${p.parts.map(x => escapeHtml(x.replace('|', ' / '))).join(' · ')}</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+        <div class="kpi"><div class="label">Composés</div><div class="value">${totalComp}</div></div>
+        <div class="kpi amber"><div class="label">Profils d'huile</div><div class="value">${p.oils.length}</div></div>
+        <div class="kpi red"><div class="label">Vertus inférées</div><div class="value">${p.vertus.length}</div></div>
+      </div>
+    </div>
+
+    ${p.therapies.length ? `<h3 style="color:var(--blue-marianne);font-size:14px;margin:16px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--blue-soft)">💊 Thérapies documentées</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${p.therapies.map(t => `<span class="rc-badge abroge" style="font-size:10px;padding:5px 10px">${escapeHtml(t)}</span>`).join('')}</div>` : ''}
+
+    ${vertusHtml ? `<h3 style="color:var(--blue-marianne);font-size:14px;margin:16px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--blue-soft)">🧪 Vertus inférées (pondérées)</h3>${vertusHtml}` : ''}
+
+    ${p.uses.length ? `<h3 style="color:var(--blue-marianne);font-size:14px;margin:16px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--blue-soft)">📖 Usages traditionnels</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${p.uses.map(u => `<span class="rc-badge voie" style="font-size:10px;padding:5px 10px">${escapeHtml(u)}</span>`).join('')}</div>` : ''}
+
+    ${p.odor_color.length ? `<h3 style="color:var(--blue-marianne);font-size:14px;margin:16px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--blue-soft)">🎨 Odeur & couleur</h3>
+      ${p.odor_color.map(oc => `<div style="padding:6px 10px;background:var(--grey-50);border-radius:4px;margin-bottom:5px;font-size:12px"><strong>${escapeHtml([oc.part, oc.subpart].filter(Boolean).join(' / '))}</strong> — odeur: <em>${escapeHtml(oc.odor || '—')}</em>, couleur: ${escapeHtml(oc.color || '—')}</div>`).join('')}` : ''}
+
+    <h3 style="color:var(--blue-marianne);font-size:14px;margin:16px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--blue-soft)">⚗️ Composition chimique</h3>
+    ${oilsHtml}
+  `;
+  area.scrollTop = 0;
+}
+
+/* ============ VUE FAMILLES ============ */
+function renderCategories(){
+  const area = $('resultsArea');
+  const data = state.filtered.length ? state.filtered : state.all;
+  if (!data.length){ area.innerHTML = '<div class="empty">Chargez des données.</div>'; return; }
+  const byPart = {};
+  for (const p of data){
+    for (const part of p.parts){
+      if (!byPart[part]) byPart[part] = { count: 0, plants: new Set(), compounds: 0 };
+      byPart[part].count++;
+      byPart[part].plants.add(p.plant);
+      byPart[part].compounds += p.compoundCount;
+    }
+  }
+  const entries = Object.entries(byPart).sort((a, b) => b[1].count - a[1].count);
+  const cards = entries.map(([part, s], i) => `
+    <div class="cat-card" data-part="${escapeHtml(part)}" style="animation-delay:${Math.min(i * 20, 400)}ms">
+      <div class="cat-head">
+        <div class="cat-name">🌿 ${escapeHtml(part.replace('|', ' / '))}</div>
+        <div class="cat-count-badge">${s.count}</div>
+      </div>
+      <div class="cat-stats">
+        <span class="cat-stat">${s.plants.size} plante(s)</span>
+        <span class="cat-stat">${fmtNum(s.compounds)} composés</span>
+      </div>
+    </div>`).join('');
+  area.innerHTML = `<div style="margin-bottom:14px;padding:12px 16px;background:var(--bg-panel);border-radius:4px;border-left:4px solid var(--gold);box-shadow:0 1px 3px rgba(0,0,0,.04)">
+    <strong style="color:var(--blue-marianne);font-size:14px">${entries.length} partie(s) de plante</strong>
+    <span style="color:var(--grey-500);font-size:12px;margin-left:8px">· ${fmtNum(data.length)} plantes</span>
+  </div><div class="cat-grid">${cards}</div>`;
+  area.querySelectorAll('.cat-card').forEach(el => {
+    el.addEventListener('click', () => {
+      state.selectedPart = el.dataset.part;
+      $('voieSelect').value = state.selectedPart;
+      applyFilters(1);
+    });
+  });
+}
+
+/* ============ VUE MATRICE ============ */
+function renderMatrix(){
+  const area = $('resultsArea');
+  const data = state.filtered.length ? state.filtered : state.all;
+  if (!data.length){ area.innerHTML = '<div class="empty">Chargez des données.</div>'; return; }
+  // Top 8 vertus × top 12 plantes
+  const vertuCount = {};
+  for (const p of data) for (const v of p.vertus) vertuCount[v] = (vertuCount[v] || 0) + 1;
+  const topVertus = Object.entries(vertuCount).sort((a,b) => b[1]-a[1]).slice(0, 8).map(x => x[0]);
+  const plants = [...data].sort((a,b) => b.compoundCount - a.compoundCount).slice(0, 12).map(p => p.plant);
+
+  let maxVal = 0;
+  const matrix = {};
+  for (const p of data){
+    if (!plants.includes(p.plant)) continue;
+    for (const v of topVertus){
+      if (p.vertus.includes(v)){
+        const key = p.plant + '||' + v;
+        const score = p.vertus_inferees[v] || 1;
+        matrix[key] = score;
+        if (score > maxVal) maxVal = score;
+      }
+    }
+  }
+  const header = `<tr><th class="row-head">Plante \\ Vertu</th>${topVertus.map(v => `<th title="${escapeHtml(v)}">${escapeHtml(v.length > 14 ? v.slice(0, 12) + '…' : v)}</th>`).join('')}</tr>`;
+  const rows = plants.map(pl => {
+    const cells = topVertus.map(v => {
+      const val = matrix[pl + '||' + v];
+      if (!val) return `<td class="cell zero">·</td>`;
+      const intensity = 0.15 + 0.85 * (val / maxVal);
+      return `<td class="cell" style="background:rgba(0,0,145,${intensity.toFixed(2)});color:${intensity > 0.5 ? '#fff' : 'var(--blue-marianne)'}" title="${escapeHtml(pl)} × ${escapeHtml(v)} : ${(val*100).toFixed(0)}%">${(val*100).toFixed(0)}</td>`;
+    }).join('');
+    return `<tr><td class="row-head" style="font-style:italic">${escapeHtml(pl)}</td>${cells}</tr>`;
+  }).join('');
+  area.innerHTML = `
+    <div style="margin-bottom:14px;padding:12px 16px;background:var(--bg-panel);border-radius:4px;border-left:4px solid var(--blue-marianne);box-shadow:0 1px 3px rgba(0,0,0,.04)">
+      <strong style="color:var(--blue-marianne);font-size:14px">🔲 Matrice Plantes × Vertus (score inféré en %)</strong>
+      <span style="color:var(--grey-500);font-size:12px;margin-left:8px">· ${plants.length} plantes · ${topVertus.length} vertus</span>
+    </div>
+    <div class="analytics-panel"><div class="panel-body"><div class="matrix-wrap"><table class="matrix"><thead>${header}</thead><tbody>${rows}</tbody></table></div></div></div>`;
+}
+
+/* ============ VUE ANALYSES ============ */
+function renderAnalytics(){
+  const area = $('resultsArea');
+  const data = state.filtered.length ? state.filtered : state.all;
+  if (!data.length){ area.innerHTML = '<div class="empty">Chargez des données.</div>'; return; }
+  const byVertu = {}, byTherapy = {}, byPart = {}, byOdor = {};
+  let abrogeCount = 0;
+  for (const p of data){
+    for (const v of p.vertus) byVertu[v] = (byVertu[v] || 0) + 1;
+    for (const t of p.therapies) byTherapy[t] = (byTherapy[t] || 0) + 1;
+    for (const part of p.parts) byPart[part] = (byPart[part] || 0) + 1;
+    for (const oc of p.odor_color) if (oc.odor) byOdor[oc.odor] = (byOdor[oc.odor] || 0) + 1;
+  }
+  const bars = (obj, color, top) => {
+    const arr = Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, top || 12);
+    const max = Math.max(...arr.map(x => x[1]), 1);
+    return arr.map(([k, v], i) => `<div class="bar-row" style="animation-delay:${Math.min(i * 30, 400)}ms">
+      <div class="name" title="${escapeHtml(k)}">${escapeHtml(k)}</div>
+      <div class="bar-track"><div class="bar-fill ${color || ''} anim-bar" style="width:0" data-w="${(v / max) * 100}%"></div></div>
+      <div class="val">${v}</div>
+    </div>`).join('');
+  };
+  const pie = makePieChart(byVertu, data.length);
+  area.innerHTML = `
+    <div class="analytics-grid">
+      <div class="analytics-panel"><div class="panel-head">🧪 TOP VERTUS INFÉRÉES</div><div class="panel-body">${pie}</div></div>
+      <div class="analytics-panel"><div class="panel-head">💊 TOP THÉRAPIES DOCUMENTÉES</div><div class="panel-body">${bars(byTherapy, 'gold', 20)}</div></div>
+      <div class="analytics-panel"><div class="panel-head">🌿 PARTIES DE PLANTE</div><div class="panel-body">${bars(byPart, '', 15)}</div></div>
+      <div class="analytics-panel"><div class="panel-head">👃 ODEURS CARACTÉRISTIQUES</div><div class="panel-body">${bars(byOdor, 'green', 15)}</div></div>
+    </div>`;
+  requestAnimationFrame(() => area.querySelectorAll('.anim-bar').forEach(b => b.style.width = b.dataset.w));
+}
+
+function makePieChart(obj, total){
+  if (!total) return '<div style="text-align:center;color:var(--grey-500);padding:24px">Aucune donnée</div>';
+  const entries = Object.entries(obj).sort((a, b) => b[1] - a[1]);
+  const MAX = 12;
+  let display;
+  if (entries.length > MAX){
+    const top = entries.slice(0, MAX - 1);
+    const rest = entries.slice(MAX - 1);
+    display = [...top, [`📦 Autres (${rest.length})`, rest.reduce((s, [, v]) => s + v, 0)]];
+  } else display = entries;
+  const SIZE = 240, R = 100, CX = SIZE / 2, CY = SIZE / 2;
+  let angle = -Math.PI / 2;
+  const slices = [], legend = [];
+  display.forEach(([label, value], i) => {
+    const frac = value / total;
+    const a0 = angle, a1 = angle + frac * Math.PI * 2;
+    angle = a1;
+    if (frac >= 0.9999){
+      slices.push(`<circle class="pie-slice" data-cat="${escapeHtml(label)}" cx="${CX}" cy="${CY}" r="${R}" style="fill:${colorForIdx(i)};animation-delay:${i * 40}ms" />`);
+    } else if (frac > 0){
+      const x0 = CX + Math.cos(a0) * R, y0 = CY + Math.sin(a0) * R;
+      const x1 = CX + Math.cos(a1) * R, y1 = CY + Math.sin(a1) * R;
+      const large = frac > 0.5 ? 1 : 0;
+      slices.push(`<path class="pie-slice" data-cat="${escapeHtml(label)}" d="M ${CX} ${CY} L ${x0} ${y0} A ${R} ${R} 0 ${large} 1 ${x1} ${y1} Z" style="fill:${colorForIdx(i)};animation-delay:${i * 40}ms" />`);
+    }
+    legend.push(`<div class="pie-legend-item" data-cat="${escapeHtml(label)}" style="animation-delay:${i * 30}ms">
+      <div class="pie-legend-color" style="background:${colorForIdx(i)}"></div>
+      <span class="pie-legend-name" title="${escapeHtml(label)}">${escapeHtml(label)}</span>
+      <span class="pie-legend-pct">${(frac * 100).toFixed(1)}%</span>
+      <span class="pie-legend-val">${value}</span>
+    </div>`);
+  });
+  return `<div class="pie-container">
+    <div class="pie-svg-wrap">
+      <svg class="pie-svg" viewBox="0 0 ${SIZE} ${SIZE}" width="${SIZE}" height="${SIZE}">${slices.join('')}</svg>
+      <div class="pie-center"><div class="pie-total">${total}</div><div class="pie-label">Plantes</div></div>
+    </div>
+    <div class="pie-legend">${legend.join('')}</div>
+  </div>`;
+}
+
+/* ============ VUE TOP COMPOSÉS (timeline remplacée) ============ */
+function renderTimeline(){
+  const area = $('resultsArea');
+  const data = state.filtered.length ? state.filtered : state.all;
+  if (!data.length){ area.innerHTML = '<div class="empty">Chargez des données.</div>'; return; }
+  const compCount = {};
+  for (const p of data){
+    for (const o of p.oils){
+      for (const c of (o.compounds || [])){
+        if (!c.name) continue;
+        if (!compCount[c.name]) compCount[c.name] = { count: 0, totalPct: 0, plants: new Set() };
+        compCount[c.name].count++;
+        compCount[c.name].totalPct += c.percent || 0;
+        compCount[c.name].plants.add(p.plant);
+      }
+    }
+  }
+  const top = Object.entries(compCount).sort((a,b) => b[1].count - a[1].count).slice(0, 25);
+  if (!top.length){ area.innerHTML = '<div class="empty">Aucun composé.</div>'; return; }
+  const max = top[0][1].count;
+  const rows = top.map(([name, s], i) => {
+    const pct = (s.count / max) * 100;
+    return `<div class="bar-row" style="animation-delay:${Math.min(i * 25, 500)}ms">
+      <div class="name" title="${escapeHtml(name)}">${escapeHtml(name)}</div>
+      <div class="bar-track"><div class="bar-fill anim-bar" style="width:0" data-w="${pct}%"></div></div>
+      <div class="val">${s.count}</div>
+    </div>`;
+  }).join('');
+  area.innerHTML = `<div class="analytics-panel">
+    <div class="panel-head">📈 TOP 25 COMPOSÉS CHIMIQUES (fréquence dans les huiles)</div>
+    <div class="panel-body">
+      <div style="margin-bottom:10px;font-size:12px;color:var(--grey-500)">Nombre de fois où le composé apparaît dans les profils d'huiles.</div>
+      ${rows}
+    </div>
+  </div>`;
+  requestAnimationFrame(() => area.querySelectorAll('.anim-bar').forEach(b => b.style.width = b.dataset.w));
+}
+
+/* ============ VUE QUALITÉ ============ */
+function renderQuality(){
+  const area = $('resultsArea');
+  if (!state.all.length){ area.innerHTML = '<div class="empty">Chargez des données.</div>'; return; }
+  const total = state.all.length;
+  let withTherapies = 0, withUses = 0, withOdor = 0, withVertus = 0, withCompounds = 0;
+  for (const p of state.all){
+    if (p.therapies.length) withTherapies++;
+    if (p.uses.length) withUses++;
+    if (p.odor_color.length) withOdor++;
+    if (p.vertus.length) withVertus++;
+    if (p.compoundCount > 0) withCompounds++;
+  }
+  const pct = n => (n / total) * 100;
+  const colorFor = p => p > 80 ? 'var(--green)' : p > 40 ? '#8a5e00' : 'var(--red-marianne)';
+  const fields = [
+    ['Composition chimique', withCompounds],
+    ['Vertus inférées', withVertus],
+    ['Thérapies documentées', withTherapies],
+    ['Usages traditionnels', withUses],
+    ['Odeur / couleur', withOdor]
+  ];
+  const rows = fields.map(([label, n]) => {
+    const p = pct(n);
+    return `<div style="display:grid;grid-template-columns:200px 1fr 80px 100px;gap:10px;padding:9px 0;font-size:12px;font-family:var(--font-mono);border-bottom:1px solid var(--grey-100);align-items:center">
+      <strong style="color:var(--grey-700);font-family:var(--font-sans)">${label}</strong>
+      <div style="background:var(--grey-100);height:14px;border-radius:3px;overflow:hidden">
+        <div style="width:${p}%;height:100%;background:${colorFor(p)};border-radius:3px"></div>
+      </div>
+      <span style="text-align:right;color:${colorFor(p)};font-weight:700">${p.toFixed(1)}%</span>
+      <span style="text-align:right;color:var(--grey-500)">${n} / ${total}</span>
+    </div>`;
+  }).join('');
+  area.innerHTML = `<div style="max-width:900px;margin:14px auto">
+    <div style="background:var(--bg-panel);border:1px solid var(--border);border-left:4px solid var(--blue-marianne);border-radius:6px;padding:16px 20px;margin-bottom:14px">
+      <div style="font-size:15px;font-weight:700;color:var(--blue-marianne);margin-bottom:14px">📊 Couverture des données sCentInDB</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
+        <div style="background:var(--grey-50);border:1px solid var(--border);border-radius:4px;padding:12px;text-align:center">
+          <div style="font-size:22px;font-weight:800;font-family:var(--font-mono);color:var(--blue-marianne)">${fmtNum(total)}</div>
+          <div style="font-size:10px;color:var(--grey-500);text-transform:uppercase;letter-spacing:.5px;margin-top:6px;font-weight:700">Plantes</div>
+        </div>
+        <div style="background:var(--grey-50);border:1px solid var(--border);border-radius:4px;padding:12px;text-align:center">
+          <div style="font-size:22px;font-weight:800;font-family:var(--font-mono);color:var(--green)">${fmtNum(state.all.reduce((s,p)=>s+p.compoundCount,0))}</div>
+          <div style="font-size:10px;color:var(--grey-500);text-transform:uppercase;letter-spacing:.5px;margin-top:6px;font-weight:700">Composés</div>
+        </div>
+      </div>
+    </div>
+    <div style="background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:16px 20px">
+      <div style="font-size:15px;font-weight:700;color:var(--blue-marianne);margin-bottom:14px">📋 Détail par source</div>
+      ${rows}
+    </div>
+  </div>`;
+}
+
+/* ============ TOAST ============ */
+function toast(msg, type = 'info', duration = 3000){
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), duration);
+}
+
+/* ============ ÉVÉNEMENTS ============ */
+$('searchBtn')?.addEventListener('click', () => state.all.length ? applyFilters(1) : $('fileInput').click());
+$('queryInput')?.addEventListener('input', () => {
+  clearTimeout(window._deb);
+  window._deb = setTimeout(() => { if (state.all.length) applyFilters(1); }, 250);
+});
+$('sortSelect')?.addEventListener('change', () => { if (state.all.length) applyFilters(1); });
+$('voieSelect')?.addEventListener('change', e => { state.selectedPart = e.target.value || null; applyFilters(1); });
+$('filtersClear')?.addEventListener('click', () => {
+  state.selectedPlants.clear();
+  state.selectedVertus.clear();
+  state.selectedPart = null;
+  $('queryInput').value = '';
+  $('voieSelect').value = '';
+  populatePlants();
+  populateVertuTags();
+  applyFilters(1);
+});
+document.querySelectorAll('.mode-tab').forEach(t => t.addEventListener('click', () => {
+  document.querySelectorAll('.mode-tab').forEach(x => x.classList.remove('active'));
+  t.classList.add('active');
+  renderResults();
+}));
+$('themeToggle')?.addEventListener('click', toggleTheme);
+$('burgerMenu')?.addEventListener('click', () => {
+  $('sidebar')?.classList.toggle('open');
+  $('mobileOverlay')?.classList.toggle('visible');
+});
+$('mobileOverlay')?.addEventListener('click', () => {
+  $('sidebar')?.classList.remove('open');
+  $('mobileOverlay')?.classList.remove('visible');
+});
+$('clearBtn')?.addEventListener('click', () => {
+  state.all = []; state.filtered = [];
+  state.selectedPlants.clear(); state.selectedVertus.clear(); state.selectedPart = null;
+  $('queryInput').value = '';
+  $('fileInput').value = '';
+  safeSet('tbCount', '—'); safeSet('tbNiveaux', '—'); safeSet('tbDisc', '—'); safeSet('tbSource', '—');
+  safeSet('ivTotal', '—'); safeSet('ivNiveaux', '—'); safeSet('ivDisc', '—'); safeSet('ivVoies', '—'); safeSet('ivYears', '—'); safeSet('ivAbroges', '—');
+  safeSet('sbCount', 'Chargez un fichier JSON');
+  $('sbList').innerHTML = '<div class="loading" style="padding:20px;font-size:11px">Aucune plante détectée.</div>';
+  $('topDisc').innerHTML = '<div style="text-align:center;color:var(--grey-500);font-size:11px;padding:8px">Chargez des données</div>';
+  $('yearsSummary').innerHTML = '<div style="text-align:center;color:var(--grey-500);font-size:11px;padding:8px">Chargez des données</div>';
+  $('resultsArea').innerHTML = `<div class="empty"><div style="font-size:48px;margin-bottom:16px">🇫🇷</div><div style="font-weight:700;margin-bottom:8px">Aucune plante chargée</div><div>Glissez <strong>ScentInDB.json</strong>.</div></div>`;
+  toast('🗑️ Données effacées', 'info');
+});
+$('exportCsv')?.addEventListener('click', () => {
+  const cols = ['plant', 'parts', 'vertus', 'therapies', 'uses'];
+  const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+  const rows = [cols.join(',')];
+  for (const p of state.filtered){
+    rows.push([p.plant, (p.parts||[]).join(' | '), (p.vertus||[]).join(' | '), (p.therapies||[]).join(' | '), (p.uses||[]).join(' | ')].map(esc).join(','));
+  }
+  const blob = new Blob(['\ufeff' + rows.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'huiles-essentielles.csv';
+  a.click();
+  toast('📥 CSV exporté', 'success');
+});
+$('exportJson')?.addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(state.filtered, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'huiles-essentielles.json';
+  a.click();
+  toast('📥 JSON exporté', 'success');
+});
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)){
+    e.preventDefault(); $('queryInput')?.focus();
+  }
+});
+
+/* ============ INIT ============ */
+(async () => {
+  applyTheme();
+  setupDropZone();
+  const dot = $('statusDot'); if (dot) dot.classList.add('offline');
+  safeSet('ivStatus', '● EN ATTENTE', 'v amber');
+  safeSet('tbSource', 'AUCUNE', 'val amber');
+})();
+</script>
+</body>
+</html>
